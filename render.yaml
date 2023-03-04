@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: django-backend
+    plan: free
+    env: python
+    region: singapore
+    buildCommand: "./api-server-django/build.sh"
+    startCommand: |
+      cd api-server-django
+      gunicorn core.wsgi --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: soft_ui
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+
+  - type: web
+    name: react-frontend
+    plan: free
+    env: node
+    region: singapore
+    buildCommand: "./react-ui/build.sh"
+    startCommand: |
+      cd react-ui
+      serve -s build
+    envVars:
+      - key: NODE_ENV
+        value: "production"
+      - key: REACT_APP_BACKEND_SERVER
+        value: "https://django-backend-fcfp.onrender.com/api/"
+
+databases:
+  - name: soft_ui
+    databaseName: soft_ui
+    user: soft_ui
+    plan: free
+    region: singapore
